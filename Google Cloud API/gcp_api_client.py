@@ -39,7 +39,7 @@ class GCPClient():
 
 
 def main():
-    client = GCPClient('eve-ng-272521','us-central1-a','4587562327453364584')
+    client = GCPClient('gcp_project','gcp_region','gcp_resource')
     stop_instance = client.stop_instance()
     pprint.pprint(stop_instance)
 
