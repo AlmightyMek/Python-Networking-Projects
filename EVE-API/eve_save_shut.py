@@ -2,13 +2,14 @@ from eve_api_modules import *
 import pprint
 
 def main():
-    eve_api = SaveAndShut()
-    login = eve_api.admin_login()
-    lab_nodes = eve_api.get_lab_nodes()
-
+    client = EveClient()
+    login = client.admin_login()
+    nodes = client.get_node_inventory()
+    #lab = client.get_lab_nodes()
+    #logout = client.admin_logout()
 
     pprint.pprint(login)
     print()
-    pprint.pprint(lab_nodes)
+    pprint.pprint(nodes)
 
 main()
