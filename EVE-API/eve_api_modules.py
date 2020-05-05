@@ -124,7 +124,7 @@ class EveClient():
         for node in self.nodes["data"]:
             for port in self.nodes["data"][node]:
                 device_dict = {
-                "device_tpe" : "cisco_ios_telnet",
+                "device_type" : "cisco_ios_telnet",
                 "host": self.nodes["data"][node]['url'],
                 "port": self.nodes["data"][node]['url']
                 }
