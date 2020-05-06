@@ -13,10 +13,10 @@ import re
 class EveClient():
     """Parent Object to interact with the EVE-NG API."""
 
-    def __init__(self, username={},password={},server_url=None,login_dict ={}, lab=None,nodes={}):
+    def __init__(self, username={},password={},server_ip=None,login_dict ={}, lab=None,nodes={}):
         self.username = username
         self.password = password
-        self.server_url = server_url #Example https://{your-server-ip/name}
+        self.server_ip = server_ip #Example https://{your-server-ip/name}
         self.login_dict = login_dict
         self.lab = lab
         self.session = Session()
@@ -29,21 +29,21 @@ class EveClient():
         to Eve-NG lab save lab device config and shut the lab down''')
 
         parser.add_argument('username', action='store',
-        help = 'Username of Admin user')
+        help = 'Username of user that is running the lab')
 
         parser.add_argument('Server', action='store',
-        help = 'Address of the Eve-NG server ex: http://my-eve-server')
+        help = 'IP Address of the Eve-NG server ex: http://[ip address]')
 
         parser.add_argument('lab', action='store',
-        help = 'Name of the lab')
+        help = 'Name of the lab with the .unl extension')
 
         args = parser.parse_args()
 
         self.username["username"] = args.username
-        self.server_url = args.Server
+        self.server_ip = args.Server
         self.lab = args.lab
 
-        return self.username , self.server_url, self.lab
+        return self.username , self.server_ip, self.lab
 
     def exception_catch(self):
 
@@ -69,7 +69,7 @@ class EveClient():
         console_dict = {"html5": "-1"}  #This will let is login with the Native console
         self.login_dict.update(console_dict)
 
-        try:
+        try:                                #Here we are passing in the Server ip
             req = Request('POST',F"https://{self.get_args()[1]}/api/auth/login" , data = (json.dumps(self.login_dict)))
             #self.cookies.update(req.cookies.get_dict())
 
@@ -119,21 +119,19 @@ class EveClient():
         node_inventory = []
 
         #Here we are looping over each node in the json we get back from the server
-        #We then are going into each dict in those and pulling router name and connection
+        #We then are going into each dict and pulling nodes name and port #s
 
         for node in self.nodes["data"]:
             for port in self.nodes["data"][node]:
                 device_dict = {
                 "device_type" : "cisco_ios_telnet",
-                "host": self.nodes["data"][node]['url'],
+                "host": self.server_ip,
                 "port": self.nodes["data"][node]['url']
                 }
                 #Here we use urlpase to spilt up the
                 #ip portion of the url and the port portion
-                # https://bip.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/urlparse/index.html
-                url_ip = urlparse(device_dict["host"])
+                # Doc https://bip.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/urlparse/index.html
                 url_port = urlparse(device_dict["port"])
-                device_dict["host"] = url_ip.hostname
                 device_dict["port"] = url_port.port
             node_inventory.append(device_dict)
 
