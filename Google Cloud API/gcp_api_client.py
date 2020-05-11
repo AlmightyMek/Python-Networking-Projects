@@ -36,12 +36,3 @@ class GCPClient():
             print(err._get_reason())
 
         return respone
-
-
-def main():
-    client = GCPClient('gcp_project','gcp_region','gcp_resource')
-    stop_instance = client.stop_instance()
-    pprint.pprint(stop_instance)
-
-if __name__ == '__main__':
-    main()
