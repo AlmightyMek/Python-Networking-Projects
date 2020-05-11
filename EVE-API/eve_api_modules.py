@@ -1,14 +1,18 @@
+import signal
 import requests
 from requests import Request, Session
 import argparse
 import json
 import getpass
+import netmiko
+from netmiko import ConnectHandler
+import concurrent.futures
 import sys
 import urllib3
 from urllib.parse import urlparse
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import re
-
+import pprint
 
 class EveClient():
     """Parent Object to interact with the EVE-NG API."""
@@ -26,7 +30,7 @@ class EveClient():
         """Parse the args from the command line
         """
         parser = argparse.ArgumentParser(description='''Script to connect
-        to Eve-NG lab save lab device config and shut the lab down''')
+        to a remote Eve-NG lab, save the lab devices' config, and then shut the lab down''')
 
         parser.add_argument('username', action='store',
         help = 'Username of user that is running the lab')
@@ -35,7 +39,7 @@ class EveClient():
         help = 'IP Address of the Eve-NG server ex: http://[ip address]')
 
         parser.add_argument('lab', action='store',
-        help = 'Name of the lab with the .unl extension')
+        help = 'Name of the lab without the .unl extension')
 
         args = parser.parse_args()
 
@@ -45,11 +49,14 @@ class EveClient():
 
         return self.username , self.server_ip, self.lab
 
-    def exception_catch(self):
+    def netmiko_exception_catch(self):
+        #Catching Netmiko netmiko_exceptions as well as Python Exceptions
+        signal.signal(signal.SIGINT, signal.SIG_DFL)  # KeyboardInterrupt: Ctrl-C
 
-        HTTPError = requests.exceptions.RequestException
+        netmiko_exceptions = (netmiko.ssh_exception.NetMikoTimeoutException,
+                          netmiko.ssh_exception.NetMikoAuthenticationException)
 
-        return HTTPError
+        return netmiko_exceptions
 
     def get_password(self):
         """Use getpass to get the password from the user
@@ -66,7 +73,7 @@ class EveClient():
         """
         self.login_dict.update(self.get_args()[0])
         self.login_dict.update(self.get_password())
-        console_dict = {"html5": "-1"}  #This will let is login with the Native console
+        console_dict = {"html5": "-1"}  #This will let us login with the Native console
         self.login_dict.update(console_dict)
 
         try:                                #Here we are passing in the Server ip
@@ -75,12 +82,13 @@ class EveClient():
 
             prepped = self.session.prepare_request(req)
             respone = self.session.send(prepped, verify=False)
-
+            respone.raise_for_status()
             #print(self.cookies)
 
-        except self.exception_catch() as e:
-            print(e)
+        except requests.exceptions.HTTPError as e:
+            raise SystemExit(e)
             sys.exit(1)
+
         return respone
 
     def admin_logout(self):
@@ -117,7 +125,8 @@ class EveClient():
     def get_node_inventory(self):
         self.nodes = self.get_lab_nodes()
         node_inventory = []
-
+        temp_dict = {}
+        devices = {}
         #Here we are looping over each node in the json we get back from the server
         #We then are going into each dict and pulling nodes name and port #s
 
@@ -125,14 +134,53 @@ class EveClient():
             for port in self.nodes["data"][node]:
                 device_dict = {
                 "device_type" : "cisco_ios_telnet",
-                "host": self.server_ip,
+                "host": self.server_ip, #All of the nodes should be at the same IP address
                 "port": self.nodes["data"][node]['url']
+                #Well set the url to this http://[server_ip]:port and then parse it below
                 }
                 #Here we use urlpase to spilt up the
                 #ip portion of the url and the port portion
                 # Doc https://bip.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/urlparse/index.html
                 url_port = urlparse(device_dict["port"])
                 device_dict["port"] = url_port.port
+
             node_inventory.append(device_dict)
+            json_node_inventory = json.dumps(node_inventory)
 
         return node_inventory
+
+    def netmiko_connect(self,devices):
+        try:
+            print(f'Connecting to the device on port {devices["port"]}')
+            net_connect = netmiko.base_connection.TelnetConnection(**devices,verbose=True)
+            host_name = net_connect.set_base_prompt()
+            print(f"Running commands on {host_name}")
+            wr_config = 'wr'
+            #net_connect.enable()
+            enable = 'enable'
+            #print(net_connect.send_command(enable))
+            print(net_connect.send_command('show ip interface br'))
+
+        except self.netmiko_exception_catch() as e:
+            print('Failed to connect to; error ', e)
+        #return output
+
+    def save_configs(self):
+        #We'll thread the connections the devices
+        #then connect to them and run the command
+
+        self.netmiko_exception_catch() #catch any exceptions
+
+        #open the threads to the devices
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            login = self.admin_login()
+            nodes = self.get_node_inventory()
+
+            results = executor.map(self.netmiko_connect, nodes)
+            self.admin_logout()
+        #output = self.netmiko_connect(self.get_node_inventory()[0])
+
+        # for results in concurrent.futures.as_completed(results):
+        #     print(results.result())
+
+        return results
