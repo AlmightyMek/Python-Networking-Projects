@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from gcp_api_client import *
 import argparse
 
@@ -18,7 +20,7 @@ def get_args():
 
 def main():
     get_args()
-    client = GCPClient('eve-ng-272521','us-central1-a','4587562327453364584')
+    client = GCPClient('eve-ng-272521','us-central1-a','4431324615673734442')
 
     if get_args()[0] == True: #This will start the VM
         instance_control = client.start_instance()
