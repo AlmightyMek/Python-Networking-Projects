@@ -50,13 +50,7 @@ class EveClient():
         return self.username , self.server_ip, self.lab
 
     def exception_catch(self):
-        #Catching Netmiko netmiko_exceptions as well as Python Exceptions
         signal.signal(signal.SIGINT, signal.SIG_DFL)  # KeyboardInterrupt: Ctrl-C
-
-        netmiko_exceptions = (netmiko.ssh_exception.NetMikoTimeoutException,
-                          netmiko.ssh_exception.NetMikoAuthenticationException)
-
-        return netmiko_exceptions
 
     def get_password(self):
         """Use getpass to get the password from the user
@@ -148,39 +142,3 @@ class EveClient():
             json_node_inventory = json.dumps(node_inventory)
 
         return node_inventory
-
-    def netmiko_connect(self,devices):
-        try:
-            print(f'Connecting to the device on port {devices["port"]}')
-            net_connect = netmiko.base_connection.TelnetConnection(**devices,verbose=True)
-            host_name = net_connect.set_base_prompt()
-            print(f"Running commands on {host_name}")
-            wr_config = 'wr'
-            #net_connect.enable()
-            enable = 'enable'
-            #print(net_connect.send_command(enable))
-            print(net_connect.send_command('show ip interface br'))
-
-        except self.netmiko_exception_catch() as e:
-            print('Failed to connect to; error ', e)
-        #return output
-
-    def save_configs(self):
-        #We'll thread the connections the devices
-        #then connect to them and run the command
-
-        self.netmiko_exception_catch() #catch any exceptions
-
-        #open the threads to the devices
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            login = self.admin_login()
-            nodes = self.get_node_inventory()
-
-            results = executor.map(self.netmiko_connect, nodes)
-            self.admin_logout()
-        #output = self.netmiko_connect(self.get_node_inventory()[0])
-
-        # for results in concurrent.futures.as_completed(results):
-        #     print(results.result())
-
-        return results
