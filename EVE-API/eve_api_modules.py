@@ -49,7 +49,7 @@ class EveClient():
 
         return self.username , self.server_ip, self.lab
 
-    def netmiko_exception_catch(self):
+    def exception_catch(self):
         #Catching Netmiko netmiko_exceptions as well as Python Exceptions
         signal.signal(signal.SIGINT, signal.SIG_DFL)  # KeyboardInterrupt: Ctrl-C
 
@@ -133,7 +133,7 @@ class EveClient():
         for node in self.nodes["data"]:
             for port in self.nodes["data"][node]:
                 device_dict = {
-                "device_type" : "cisco_ios_telnet",
+                "name" : self.nodes['data']['name'],
                 "host": self.server_ip, #All of the nodes should be at the same IP address
                 "port": self.nodes["data"][node]['url']
                 #Well set the url to this http://[server_ip]:port and then parse it below
