@@ -38,17 +38,18 @@ class GenieClient():
         '''Saves the device's in the testbed
         running config to the start up config'''
 
-        write_config = self.pcall_run("write memory")
+        def write_mem(devices):
+            print(f'Running commands on {devices}...')
+            cmd = "write memory"
+            output = devices.execute(cmd)
+            print(f'Output of device {devices}\n' + output + '\n')
 
-        for device in self.devices:
-            print(f'Running commands on {device}...')
-            print(write_config)
+        #Using pcall to run the abov function in parrell
+        write_config = pcall(write_mem,devices=self.devices.values())
 
-
-    def pcall_run(self,func,devices=self.deivces.values()):
-        result = pcall(func,self.deivces.values)
-
-        return result
+        # for device in self.devices:
+        #     print(f'Running commands on {device}...')
+        #     print(write_config)
 
     def get_running_config(self):
         """Grabs the running config from devices in the
