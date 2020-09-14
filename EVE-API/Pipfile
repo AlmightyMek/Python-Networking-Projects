@@ -7,7 +7,9 @@ verify_ssl = true
 
 [packages]
 requests = "*"
-pprint = "*"
+netmiko = "*"
+pyats = {extras = ["full"], version = "*"}
+"genie.libs.sdk" = "*"
 
 [requires]
 python_version = "3.6"

@@ -4,8 +4,6 @@ from requests import Request, Session
 import argparse
 import json
 import getpass
-import netmiko
-from netmiko import ConnectHandler
 import concurrent.futures
 import sys
 import urllib3
@@ -50,7 +48,11 @@ class EveClient():
         return self.username , self.server_ip, self.lab
 
     def exception_catch(self):
+        e = requests.exceptions.HTTPError
+        raise SystemExit(e)
         signal.signal(signal.SIGINT, signal.SIG_DFL)  # KeyboardInterrupt: Ctrl-C
+
+        return e
 
     def get_password(self):
         """Use getpass to get the password from the user
@@ -91,8 +93,9 @@ class EveClient():
             req  = requests.post(F"https://{self.get_args()[1]}/api/auth/logout" , data = (json.dumps(self.login_dict)), verify=False)
 
         except self.exception_catch() as e:
-            print(e)
+            raise SystemExit(e)
             sys.exit(1)
+
         return req
 
     def get_lab_nodes(self):
@@ -102,43 +105,52 @@ class EveClient():
                                     #https://[public-ip]/api/labs/Shared/OSPF-LSAs.unl
             prepped = self.session.prepare_request(req)
             respone = self.session.send(prepped, verify=False)
+            respone.raise_for_status()
 
-        except self.exception_catch() as e:
-            print("Lab not found in the shared folder " + e)
+        except requests.exceptions.HTTPError as e:
+            raise SystemExit(e)
+            sys.exit(1)
 
         else:
             try:
                 req = self.session.get(f"https://{self.get_args()[1]}/api/labs/{self.username}/{self.get_args()[2]}/nodes", verify=False)
 
-            except self.exception_catch() as e:
-                print("Lab not found in the user's folder " + e)
+            except requests.exceptions.HTTPError as e:
+                raise SystemExit(e)
                 sys.exit(1)
 
         return respone.json()
 
     def get_node_inventory(self):
-        self.nodes = self.get_lab_nodes()
-        node_inventory = []
-        temp_dict = {}
-        devices = {}
-        #Here we are looping over each node in the json we get back from the server
-        #We then are going into each dict and pulling nodes name and port #s
+        try:
+            self.nodes = self.get_lab_nodes()
+            node_inventory = []
+            temp_dict = {}
+            devices = {}
 
-        for node in self.nodes["data"]:
-            for port in self.nodes["data"][node]:
-                device_dict = {
-                "name" : self.nodes['data']['name'],
-                "host": self.server_ip, #All of the nodes should be at the same IP address
-                "port": self.nodes["data"][node]['url']
-                #Well set the url to this http://[server_ip]:port and then parse it below
-                }
-                #Here we use urlpase to spilt up the
-                #ip portion of the url and the port portion
-                # Doc https://bip.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/urlparse/index.html
-                url_port = urlparse(device_dict["port"])
-                device_dict["port"] = url_port.port
 
-            node_inventory.append(device_dict)
-            json_node_inventory = json.dumps(node_inventory)
+            #Here we are looping over each node in the json we get back from the server
+            #We then are going into each dict and pulling nodes name and port #s
+
+            for node in self.nodes["data"]:
+                for port in self.nodes["data"][node]:
+                    device_dict = {
+                    "name" : self.nodes['data'][node]['name'],
+                    "ip": self.server_ip, #All of the nodes should be at the same IP address
+                    "port": self.nodes["data"][node]['url']
+                    #Well set the url to this http://[server_ip]:port and then parse it below
+                    }
+                    #Here we use urlpase to spilt up the
+                    #ip portion of the url and the port portion
+                    # Doc https://bip.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/urlparse/index.html
+                    url_port = urlparse(device_dict["port"])
+                    device_dict["port"] = url_port.port
+
+                node_inventory.append(device_dict)
+                json_node_inventory = json.dumps(node_inventory)
+
+        except requests.exceptions.HTTPError as e:
+            raise SystemExit(e)
+            sys.exit(1)
 
         return node_inventory
