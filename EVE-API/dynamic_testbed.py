@@ -1,12 +1,9 @@
-#import yaml
-import csv
-import os
-from eve_api_modules import *
+from eve_api_modules import EveClient
 import pprint
 
 def get_nodes_from_eve():
     client = EveClient()
-    login = client.admin_login()
+    login = client.admin_login() #Login into the server and get the nodes
     nodes = client.get_node_inventory()
 
     return nodes
@@ -33,14 +30,7 @@ def create_device_inventory():
             "password" : "",
             "os": "",
             "type": ""}}
-        # mydict_template =  {f'{hostname}': {'alias': f'{hostname}'},
-        #                                     'os': '',
-		# 									'connections': {'cli': {'ip': f'{ip_address}',
-        #                                                             'port': f'{port}',
-		# 															'protocol': 'telnet'}},
-        #                                                     {'a': {'ip': f'{ip_address}',
-        #                                                                     'port': f'{port}',
-        #         															'protocol': 'telnet'}}
+        
         mydict['devices'].update(mydict_template)
 
     return mydict

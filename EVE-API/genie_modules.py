@@ -25,7 +25,7 @@ class GenieClient():
         return push_config
 
     def get_info(self,command):
-        """Generic method to get strcutred
+        """Generic method to get structured
         data back. Depends on if the genie parser is present for that command
         """
         for device in self.devices:
@@ -42,14 +42,11 @@ class GenieClient():
             print(f'Running commands on {devices}...')
             cmd = "write memory"
             output = devices.execute(cmd)
-            print(f'Output of device {devices}\n' + output + '\n')
+            print(f'\nOutput of {cmd} on {devices}\n' + output + '\n')
 
-        #Using pcall to run the abov function in parrell
+        #Using pcall to run the above function in Parallel
+
         write_config = pcall(write_mem,devices=self.devices.values())
-
-        # for device in self.devices:
-        #     print(f'Running commands on {device}...')
-        #     print(write_config)
 
     def get_running_config(self):
         """Grabs the running config from devices in the
