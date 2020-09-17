@@ -11,7 +11,7 @@ class GenieClient():
     def __init__(self,testbed,log=False):
         """Init the Config Object and connect to Testbed"""
 
-        self.testbed = testbed.connect(log_stdout=log)
+        self.testbed = testbed.connect(log_stdout=log,learn_os=True)
         self.devices = testbed.devices
 
     def push_config(self):
