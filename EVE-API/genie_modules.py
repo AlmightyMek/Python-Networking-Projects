@@ -88,15 +88,16 @@ class GenieClient():
     #Make sure this works               
                 if local_interface any in management_interface: #Check if the local interface is 
                     interface_desc=(f'Conneted to the backbone') # management interface, if so set this desc
+                    
+                else: #Set the desc based on hostname and remote interface
+                   interface_desc=(f"connected to {remote_device_hostname} via its {remote_device_interface} interface")           
 
-                interface_desc=(f"connected to {remote_device_hostname} via its {remote_device_interface} interface")           
+                    iosxe_interface = Interface(device=self.devices[device], name=local_interface)
+                    iosxe_interface.description = interface_desc
 
-                iosxe_interface = Interface(device=self.devices[device], name=local_interface)
-                iosxe_interface.description = interface_desc
-
-                final_config = iosxe_interface.build_config(apply=True)
-                print(f"Interface configuration for {self.devices[device]} \n {final_config}")
-                #final_config = iosxe_interface.build_config(apply=True)
+                    final_config = iosxe_interface.build_config(apply=True)
+                    print(f"Interface configuration for {self.devices[device]} \n {final_config}")
+                    #final_config = iosxe_interface.build_config(apply=True)
 
     def get_inventory(self):
         """Get inventory from testbed devices"""
