@@ -86,7 +86,7 @@ class GenieClient():
                 remote_device_hostname = interface_dict[device]["cdp"]["index"][index]["device_id"]
                 remote_device_interface = interface_dict[device]["cdp"]["index"][index]["port_id"]
     #Make sure this works               
-                if local_interface any in management_interface: #Check if the local interface is 
+                if local_interface in management_interface: #Check if the local interface is 
                     interface_desc=(f'Conneted to the backbone') # management interface, if so set this desc
                     
                 else: #Set the desc based on hostname and remote interface
