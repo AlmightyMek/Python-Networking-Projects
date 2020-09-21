@@ -76,6 +76,7 @@ class GenieClient():
         """Updates device interface desc with the cdp information from the get_cdp function
         """
         interface_dict = self.get_cdp()
+        management_interface = ['GigabitEthernet0/0','MgmtEth0/RP0/CPU0/0','GigabitEthernet0']
 
         for device in self.devices:
 
@@ -84,8 +85,11 @@ class GenieClient():
                 #pprint.pprint(local_interface)
                 remote_device_hostname = interface_dict[device]["cdp"]["index"][index]["device_id"]
                 remote_device_interface = interface_dict[device]["cdp"]["index"][index]["port_id"]
+    #Make sure this works               
+                if local_interface any in management_interface: #Check if the local interface is 
+                    interface_desc=(f'Conneted to the backbone') # management interface, if so set this desc
 
-                interface_desc=(f"connected to {remote_device_hostname} via its {remote_device_interface} interface")
+                interface_desc=(f"connected to {remote_device_hostname} via its {remote_device_interface} interface")           
 
                 iosxe_interface = Interface(device=self.devices[device], name=local_interface)
                 iosxe_interface.description = interface_desc
