@@ -80,17 +80,19 @@ class GenieClient():
 
         for device in self.devices:
 
-            for index in interface_dict[device]["cdp"]["index"]: # For each cdp entry in each of the devices
-                local_interface = interface_dict[device]["cdp"]["index"][index]["local_interface"]
+            interface_dict = [device]["cdp"]['index'] #We start the for loop at the index of the dict we get back
+
+            for index in interface_dict: # For each cdp entry in each of the devices
+                local_interface = interface_dict[index]["local_interface"]
                 #pprint.pprint(local_interface)
-                remote_device_hostname = interface_dict[device]["cdp"]["index"][index]["device_id"]
-                remote_device_interface = interface_dict[device]["cdp"]["index"][index]["port_id"]
-    #Make sure this works               
-                if local_interface in management_interface: #Check if the local interface is 
-                    interface_desc=(f'Conneted to the backbone') # management interface, if so set this desc
+                remote_device_hostname = interface_dict[index]["device_id"]
+                remote_device_interface = interface_dict[index]["port_id"]
+        #Make sure this works               
+                if local_interface in management_interface: #Check if the local interface is a management interface
+                    interface_desc=(f'Conneted to the backbone device {remote_device_hostname} via its {remote_device_interface} interface')  # if so set this desc
                     
                 else: #Set the desc based on hostname and remote interface
-                   interface_desc=(f"connected to {remote_device_hostname} via its {remote_device_interface} interface")           
+                    interface_desc=(f"connected to {remote_device_hostname} via its {remote_device_interface} interface")           
 
                     iosxe_interface = Interface(device=self.devices[device], name=local_interface)
                     iosxe_interface.description = interface_desc

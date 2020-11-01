@@ -2,9 +2,10 @@ from eve_api_modules import EveClient
 import pprint
 
 def get_nodes_from_eve():
+    
     client = EveClient()
     login = client.admin_login() #Login into the server and get the nodes
-    nodes = client.get_node_inventory()
+    nodes = client.create_node_inventory()
 
     return nodes
 

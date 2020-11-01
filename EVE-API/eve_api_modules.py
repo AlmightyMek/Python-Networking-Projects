@@ -121,7 +121,7 @@ class EveClient():
 
         return respone.json()
 
-    def get_node_inventory(self):
+    def create_node_inventory(self):
         try:
             self.nodes = self.get_lab_nodes()
             node_inventory = []
@@ -138,7 +138,7 @@ class EveClient():
                     "name" : self.nodes['data'][node]['name'],
                     "ip": self.server_ip, #All of the nodes should be at the same IP address
                     "port": self.nodes["data"][node]['url']
-                    #Well set the url to this http://[server_ip]:port and then parse it below
+                    #We'll set the url to this http://[server_ip]:port and then parse it below
                     }
                     #Here we use urlpase to spilt up the
                     #ip portion of the url and the port portion
